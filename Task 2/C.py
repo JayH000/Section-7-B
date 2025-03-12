@@ -21,47 +21,27 @@ def gaussian_quadrature(a, b, c, N=10):
     weights *= np.pi / 2
     return np.sum(weights * f(nodes, a, b, c))
 
-def monte_carlo_integral(a, b, c, N):
+def monte_carlo_integration(a, b, c, N):
     theta_samples = np.random.uniform(0, np.pi, N)
-    return np.pi * np.mean(f(theta_samples, a, b, c))
+    return np.mean(f(theta_samples, a, b, c)) * np.pi
 
-# Grid of beta and c values
-beta_vals = np.logspace(-3, 3, 50)
-c_vals = np.logspace(-3, 3, 50)
-errors = np.zeros((50, 50))
-
-for i, beta in enumerate(beta_vals):
-    for j, c in enumerate(c_vals):
-        exact = exact_surface_area(beta, c)
-        approx = gaussian_quadrature(beta, beta, c)  # Using Gaussian quadrature
-        errors[i, j] = abs(approx - exact) / exact
-
-# Monte Carlo error analysis
-beta, c = 0.5, 0.5  # Fixed values for Monte Carlo test
-N_samples = [10, 100, 1000, 10000, 100000]
-mc_errors = []
+# Monte Carlo Error Analysis
+beta, c = 0.5, 1  # Given 2beta = c = 1
+N_values = [10, 100, 1000, 10000, 100000]
+errors_mc = []
 exact_value = exact_surface_area(beta, c)
-for N in N_samples:
-    mc_approx = monte_carlo_integral(beta, beta, c, N)
-    mc_errors.append(abs(mc_approx - exact_value) / exact_value)
 
-# Plot Monte Carlo error
+for N in N_values:
+    mc_approx = monte_carlo_integration(beta, beta, c, N)
+    error = abs(mc_approx - exact_value) / exact_value
+    errors_mc.append(error)
+
+# Plot Monte Carlo Errors
 plt.figure(figsize=(8, 6))
-plt.plot(N_samples, mc_errors, marker='o', linestyle='-', label='Monte Carlo Error')
-plt.xscale('log')
-plt.yscale('log')
+plt.loglog(N_values, errors_mc, marker='o', linestyle='-', label='Monte Carlo Error')
 plt.xlabel('Number of Samples (N)')
 plt.ylabel('Relative Error')
-plt.title('Monte Carlo Error Analysis')
+plt.title('Monte Carlo Error Convergence')
 plt.legend()
-plt.grid()
-plt.show()
-
-# Plot heatmap
-plt.figure(figsize=(8, 6))
-plt.imshow(errors, extent=[-3, 3, -3, 3], origin='lower', aspect='auto', cmap='inferno')
-plt.colorbar(label='Relative Error')
-plt.xlabel('log10(beta)')
-plt.ylabel('log10(c)')
-plt.title('Error Heatmap of Surface Area Approximation')
+plt.grid(True, which='both', linestyle='--', linewidth=0.5)
 plt.show()
